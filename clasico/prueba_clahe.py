@@ -9,12 +9,12 @@ if img is None:
 lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
 l, a, b = cv2.split(lab)
 
-clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+clahe = cv2.createCLAHE(clipLimit=8.0, tileGridSize=(16, 16))
 l_mejorado = clahe.apply(l)
 
 lab_mejorado = cv2.merge((l_mejorado, a, b))
 mejorada = cv2.cvtColor(lab_mejorado, cv2.COLOR_LAB2BGR)
 
 comparacion = np.hstack((img, mejorada))
-cv2.imwrite("resultados/comparacion_clahe.jpg", comparacion)
-print("Listo: revisa resultados/comparacion_clahe.jpg")
+cv2.imwrite("resultados/comparacion_clahe_v2.jpg", comparacion)
+print("Listo: revisa resultados/comparacion_clahe_v2.jpg")
