@@ -23,7 +23,7 @@ for ruta in rutas:
     pares.append((reducir_ruido(cv2.imread(ruta)), ref))
 
 resultados = []
-for g, clip, color in itertools.product([0.3, 0.4, 0.5, 0.6], [2.0, 3.0, 4.0], [1.0, 1.4]):
+for g, clip, color in itertools.product([0.15, 0.2, 0.25, 0.3], [3.0], [1.0]):
     ps, ss = [], []
     for limpia, ref in pares:
         m = mejorar_sin_ruido(limpia, g, clip, color)
