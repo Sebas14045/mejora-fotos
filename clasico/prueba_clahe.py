@@ -1,5 +1,7 @@
 import cv2 
 import numpy as np
+import os
+os.makedirs("resultados", exist_ok=True)
 
 img = cv2.imread("data/foto.jpg")
 

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-
+import os
+os.makedirs("resultados", exist_ok=True)
 
 def reducir_ruido(img, fuerza=7):
     # fuerza: más alto = más suave, pero se pierde detalle fino

@@ -3,7 +3,7 @@
 Mejora de fotografías en condiciones de poca luz. Este repositorio arranca con un
 **baseline clásico** (sin aprendizaje automático) que combina técnicas de procesamiento
 de imágenes con OpenCV y se evalúa de forma objetiva sobre el dataset **LOL** usando las
-métricas PSNR y SSIM.
+métricas PSNR y SSIM. La siguiente fase compara este baseline contra una CNN.
 
 ## ¿Qué hace?
 
@@ -48,6 +48,9 @@ mejora-fotos/
 ## Instalación
 
 ```bash
+git clone https://github.com/Sebas14045/mejora-fotos.git
+cd mejora-fotos
+
 python -m venv venv
 # Windows
 venv\Scripts\activate
@@ -57,10 +60,20 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+El entorno virtual no se versiona: cada equipo lo recrea con estos comandos.
+
 ## Datos
 
 El proyecto espera los datos en la carpeta `data/` (que debes crear). Para la evaluación
-y el ajuste de parámetros se usa el dataset **LOL** (Low-Light) con esta estructura:
+y el ajuste de parámetros se usa el dataset **LOL** (Low-Light): 500 pares de imágenes
+con poca luz y con luz normal, divididos en 485 para entrenamiento y 15 para prueba,
+introducido en el paper *Deep Retinex Decomposition for Low-Light Enhancement*
+(Wei et al., 2018).
+
+Una copia está disponible en Google Drive, enlazada desde el ejemplo de Keras sobre mejora
+de baja luz: https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
+
+Debe quedar con esta estructura:
 
 ```
 data/
@@ -110,8 +123,42 @@ a la imagen oscura original.
 | `mejorar_sin_ruido(img, g, clip, color)` | Gamma → CLAHE + color. |
 | `mejora_clasica(img, ...)` | Pipeline completo: ruido → gamma → CLAHE + color. |
 
+## Métricas
+
+- **PSNR** (dB): error píxel a píxel frente a la referencia. Más alto es mejor.
+- **SSIM** (0 a 1): similitud de estructura, contraste y luminancia. Más cerca de 1 es mejor.
+
+Ambas miden parecido con la referencia, no calidad estética, y pueden no coincidir entre sí
+ni con la percepción visual.
+
+## Parámetros del baseline
+
+Los parámetros se eligieron con una búsqueda sobre 40 imágenes de `LOL/our485`
+(`ajustar_clasico.py`) y se evaluaron **una sola vez** sobre `LOL/eval15`, para evitar
+ajustar con el conjunto de prueba.
+
+| Parámetro | Valor |
+|---|---|
+| `g` (gamma) | 0.3 |
+| `clip` (CLAHE) | 3.0 |
+| `color` | 1.0 |
+| `fuerza_ruido` | 5 |
+
+## Resultados (LOL/eval15)
+
+| | PSNR (dB) | SSIM |
+|---|---|---|
+| Sin mejora | 7.77 | 0.191 |
+| Baseline clásico | XX | XX |
+| CNN | pendiente | pendiente |
+
 ## Estado y próximos pasos
 
-La carpeta `clasico/` establece el baseline de referencia. El `.gitignore` ya contempla
-pesos de modelos (`*.pt`, `*.pth`), anticipando una siguiente fase con métodos basados en
-aprendizaje profundo para comparar contra este baseline.
+- [x] Baseline clásico con ajuste de parámetros y evaluación con PSNR y SSIM
+- [ ] CNN entrenada sobre `LOL/our485` y evaluada sobre `LOL/eval15`
+- [ ] Comparación clásico vs. CNN
+- [ ] Aplicación web (Flask) para subir una foto y ver original, clásico y CNN lado a lado
+
+El entrenamiento de la CNN requerirá **PyTorch**, que no está en `requirements.txt` porque
+la versión depende del hardware de cada equipo. Se instala aparte siguiendo las
+instrucciones de https://pytorch.org. Los pesos entrenados (`*.pth`) no se versionan.
