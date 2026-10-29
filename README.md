@@ -149,7 +149,7 @@ ajustar con el conjunto de prueba.
 | | PSNR (dB) | SSIM |
 |---|---|---|
 | Sin mejora | 7.77 | 0.191 |
-| Baseline clásico | XX | XX |
+| Baseline clásico | 17.10 | 0.728 |
 | CNN | pendiente | pendiente |
 
 ## Estado y próximos pasos
