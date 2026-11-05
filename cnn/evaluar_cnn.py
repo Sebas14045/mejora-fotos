@@ -12,6 +12,7 @@ from inferencia import cargar_modelo, mejorar
 p = argparse.ArgumentParser()
 p.add_argument("--pesos", default="modelos/unet_mejor.pth")
 p.add_argument("--base", type=int, default=32)
+p.add_argument("--up", default="transpuesta", choices=["transpuesta", "bilineal"])
 p.add_argument("--salida", default="resultados/cnn_eval15")
 a = p.parse_args()
 
@@ -19,7 +20,7 @@ BAJA = "data/LOL/eval15/low"
 BUENA = "data/LOL/eval15/high"
 os.makedirs(a.salida, exist_ok=True)
 
-modelo, dispositivo = cargar_modelo(a.pesos, a.base)
+modelo, dispositivo = cargar_modelo(a.pesos, a.base, up=a.up)
 
 rutas = sorted(glob.glob(os.path.join(BAJA, "*.png")))
 if not rutas:
@@ -39,6 +40,6 @@ for ruta in rutas:
     ss.append(s_i)
     print(f"{nombre:12s} PSNR {p_i:5.2f} | SSIM {s_i:.3f}")
 
-print(f"\nPesos: {a.pesos}")
+print(f"\nPesos: {a.pesos} (up={a.up})")
 print(f"Imágenes evaluadas: {len(rutas)}")
 print(f"CNN : PSNR {np.mean(ps):.2f} dB | SSIM {np.mean(ss):.3f}")

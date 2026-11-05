@@ -6,9 +6,9 @@ import torch.nn.functional as F
 from model import UNet
 
 
-def cargar_modelo(ruta, base=32, dispositivo=None):
+def cargar_modelo(ruta, base=32, dispositivo=None, up="transpuesta"):
     dispositivo = dispositivo or ("cuda" if torch.cuda.is_available() else "cpu")
-    modelo = UNet(base=base).to(dispositivo)
+    modelo = UNet(base=base, up=up).to(dispositivo)
     modelo.load_state_dict(torch.load(ruta, map_location=dispositivo))
     modelo.eval()
     return modelo, dispositivo

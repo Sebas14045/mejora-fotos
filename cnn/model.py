@@ -3,6 +3,7 @@ import torch.nn as nn
 
 
 def bloque(entrada, salida):
+    # Dos convoluciones 3x3 seguidas de ReLU
     return nn.Sequential(
         nn.Conv2d(entrada, salida, 3, padding=1), nn.ReLU(inplace=True),
         nn.Conv2d(salida, salida, 3, padding=1), nn.ReLU(inplace=True),
@@ -25,11 +26,13 @@ class UNet(nn.Module):
         super().__init__()
         self.pool = nn.MaxPool2d(2)
 
+        # Codificador: reduce la imagen y gana contexto
         self.e1 = bloque(3, base)
         self.e2 = bloque(base, base * 2)
         self.e3 = bloque(base * 2, base * 4)
         self.fondo = bloque(base * 4, base * 8)
 
+        # Decodificador: vuelve a agrandar, recibiendo los detalles del codificador
         self.up3 = subir(base * 8, base * 4, up)
         self.d3 = bloque(base * 8, base * 4)
         self.up2 = subir(base * 4, base * 2, up)
@@ -45,8 +48,10 @@ class UNet(nn.Module):
         e3 = self.e3(self.pool(e2))
         f = self.fondo(self.pool(e3))
 
+        # torch.cat une el detalle fino del codificador (conexión de salto)
         d3 = self.d3(torch.cat([self.up3(f), e3], dim=1))
         d2 = self.d2(torch.cat([self.up2(d3), e2], dim=1))
         d1 = self.d1(torch.cat([self.up1(d2), e1], dim=1))
 
+        # Aprendizaje residual: la red predice la corrección, no la imagen completa
         return x + self.salida(d1)

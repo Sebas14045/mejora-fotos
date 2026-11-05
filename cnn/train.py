@@ -23,10 +23,14 @@ def main():
     p.add_argument("--parche", type=int, default=256)
     p.add_argument("--base", type=int, default=32)
     p.add_argument("--lr", type=float, default=2e-4)
+    p.add_argument("--up", default="transpuesta", choices=["transpuesta", "bilineal"])
+    p.add_argument("--nombre", default="unet")
     a = p.parse_args()
 
     dispositivo = "cuda" if torch.cuda.is_available() else "cpu"
     print("Entrenando en:", dispositivo)
+    print(f"Configuración: up={a.up} parche={a.parche} base={a.base} "
+          f"lote={a.lote} épocas={a.epocas} nombre={a.nombre}")
 
     raiz = "data/LOL/our485"
     ds_train = LOLDataset(raiz, entrenamiento=True, parche=a.parche)
@@ -40,13 +44,15 @@ def main():
     cargador = DataLoader(train, batch_size=a.lote, shuffle=True)
     cargador_val = DataLoader(val, batch_size=1)
 
-    modelo = UNet(base=a.base).to(dispositivo)
+    modelo = UNet(base=a.base, up=a.up).to(dispositivo)
     optimizador = torch.optim.Adam(modelo.parameters(), lr=a.lr)
     perdida = nn.L1Loss()
     # Baja el learning rate suavemente a lo largo del entrenamiento
     programador = torch.optim.lr_scheduler.CosineAnnealingLR(optimizador, T_max=a.epocas)
 
     os.makedirs("modelos", exist_ok=True)
+    ruta_mejor = f"modelos/{a.nombre}_mejor.pth"
+    ruta_ultimo = f"modelos/{a.nombre}_ultimo.pth"
     mejor = 0.0
     inicio = time.time()
 
@@ -59,33 +65,3 @@ def main():
             error = perdida(salida, high)
             optimizador.zero_grad()
             error.backward()
-            optimizador.step()
-            total += error.item()
-
-        programador.step()
-
-        if epoca % 5 == 0 or epoca == a.epocas:
-            modelo.eval()
-            valores = []
-            with torch.no_grad():
-                for low, high in cargador_val:
-                    low, high = low.to(dispositivo), high.to(dispositivo)
-                    salida = modelo(low).clamp(0, 1)
-                    valores.append(psnr(salida, high))
-            p_val = sum(valores) / len(valores)
-            marca = ""
-            if p_val > mejor:
-                mejor = p_val
-                torch.save(modelo.state_dict(), "modelos/unet_mejor.pth")
-                marca = "  <- mejor"
-            lr_actual = optimizador.param_groups[0]["lr"]
-            print(f"Época {epoca:3d} | pérdida {total / len(cargador):.4f} | "
-                  f"PSNR val {p_val:.2f} dB | lr {lr_actual:.2e}{marca} | "
-                  f"{time.time() - inicio:.0f}s")
-
-    torch.save(modelo.state_dict(), "modelos/unet_ultimo.pth")
-    print("Listo. Mejor PSNR de validación:", round(mejor, 2))
-
-
-if __name__ == "__main__":
-    main()
